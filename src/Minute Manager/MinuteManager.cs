@@ -10,9 +10,11 @@ namespace MinuteManager
 {
     public partial class MinuteManager : Form
     {
+        private IDataSource dataSource;
         public MinuteManager()
         {
             InitializeComponent();
+            dataSource = new XmlDataSource();
         }
     }
 }

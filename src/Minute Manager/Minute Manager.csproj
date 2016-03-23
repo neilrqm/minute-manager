@@ -40,6 +40,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AgendaItem.cs" />
+    <Compile Include="Controller.cs" />
+    <Compile Include="Decision.cs" />
+    <Compile Include="Guidance.cs" />
+    <Compile Include="IDataSource.cs" />
+    <Compile Include="Item.cs" />
+    <Compile Include="Meeting.cs" />
+    <Compile Include="Member.cs" />
     <Compile Include="MinuteManager.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -48,6 +56,8 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XmlDataSource.cs" />
+    <Compile Include="Year.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
