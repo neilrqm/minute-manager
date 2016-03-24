@@ -60,8 +60,11 @@ namespace MinuteManager
         /// Get the current LSA year.
         /// </summary>
         /// <remarks>Since the LSA year starts at Ridvan, this will not be the actual Baha'i year if the current
-        /// date falls between Naw Ruz and Ridvan.  The "current year" is the year in which Ridvan last fell.</remarks>
-        /// <returns>The current LSA year in B.E., or 0 if there was an error.</returns>
+        /// date falls between Naw Ruz and Ridvan.  The "current year" is the year in which Ridvan last fell.
+        /// The dates of Ridvan up to 189 B.E. are written to yearinfo.xml in the appdata directory, and if the
+        /// system year's date is outside the range in that file then the year is guessed based on Ridvan
+        /// being on April 21.</remarks>
+        /// <returns>The current LSA year in B.E., or a guess if there was an error.</returns>
         public int GetCurrentLsaYear()
         {
             List<YearInfo> years = GetYearData();
@@ -73,8 +76,9 @@ namespace MinuteManager
                     return years[i].lsaYear;
                 }
             }
-            InternalError("Is it really after 2032???  If so, you need to add more years to the yearinfo.xml file in the appdata folder in your emulated copy of Windows running on your crazy 3D optical computron.  If not, maybe you should check your system clock, because I can't figure out what year it is.", false);
-            return 0;
+            InternalError("Is it really after 2032???  If so, you need to add more years to the yearinfo.xml file in the appdata folder in your emulated copy of Windows running on your crazy 3D optical computron.  If not, maybe you should check your system clock, because I'm not sure what year it is.", false);
+            // if all else fails, return the number of years between now and Ridvan, 1844
+            return (new DateTime(1, 1, 1)).Add(now - new DateTime(1844, 4, 21)).Year;
         }
 
         public Item CreateItem()
