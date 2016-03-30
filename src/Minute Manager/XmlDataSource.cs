@@ -41,8 +41,9 @@ namespace MinuteManager
             {
                 Directory.CreateDirectory(tempDir);
             }
+
+            // test calls
             Year x = CreateNewYear(GetCurrentLsaYear());
-            Save();
             Year y = Load(x.LsaYear);
             return;
         }
@@ -51,7 +52,19 @@ namespace MinuteManager
         {
             get
             {
-                throw new NotImplementedException();
+                List<int> years = new List<int>();
+
+                string[] saveFiles = Directory.GetFiles(dataPath, "*.mm", SearchOption.TopDirectoryOnly);
+                foreach (string f in saveFiles)
+                {
+                    int year;
+                    if (int.TryParse(f.Replace(".mm", ""), out year))
+                    {
+                        years.Add(year);
+                    }
+                }
+
+                return years;
             }
         }
 
@@ -98,6 +111,7 @@ namespace MinuteManager
                 XmlSerializer serializer = new XmlSerializer(typeof(List<Guidance>));
                 serializer.Serialize(fs, new List<Guidance>());
             }
+            Save();
             return newYear;
         }
 
