@@ -8,14 +8,14 @@ namespace MinuteManager
     {
         event InternalErrorEventHandler OnInternalError;
         List<int> YearsAvailable { get; }
-        int CreateCurrentYear();
+        Year CreateNewYear(int year);
         int GetCurrentLsaYear();
         List<Meeting> GetMeetingsForYear(int year);
         List<Member> GetMembersForYear(int year);
         Meeting AddNewMeeting();
         void RemoveMeeting(Meeting meeting);
         Item CreateItem();
-        void SaveMeeting(Meeting meeting);
+        void Save();
         void SaveTempMeeting(Meeting meeting);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -20,6 +21,7 @@ namespace MinuteManager
             public DateTime firstOfRidvan;
         }
         private string dataPath;
+        private string tempDir;
 
         public event InternalErrorEventHandler OnInternalError;
 
@@ -34,7 +36,14 @@ namespace MinuteManager
             {
                 WriteDefaultYearData();
             }
-            int x = GetCurrentLsaYear();
+            tempDir = Path.GetTempPath() + @"Minute Manager\";
+            if (!Directory.Exists(tempDir))
+            {
+                Directory.CreateDirectory(tempDir);
+            }
+            Year x = CreateNewYear(GetCurrentLsaYear());
+            Save();
+            Year y = Load(x.LsaYear);
             return;
         }
 
@@ -51,9 +60,45 @@ namespace MinuteManager
             throw new NotImplementedException();
         }
 
-        public int CreateCurrentYear()
+        /// <summary>
+        /// Create new files for the current LSA year in the temp directory.
+        /// </summary>
+        /// <remarks>If there are already data for the given year in the temp directory, they will be overwritten.</remarks>
+        /// <returns>The year number.</returns>
+        public Year CreateNewYear(int year)
         {
-            throw new NotImplementedException();
+            string yearTempDir = string.Format(@"{0}\{1}\", tempDir, year);
+            if (Directory.Exists(yearTempDir))
+            {
+                // recursively delete the temp directory and its contents.
+                Directory.Delete(yearTempDir, true);
+            }
+            Directory.CreateDirectory(yearTempDir);
+            Year newYear = new Year(year);
+            using (FileStream fs = new FileStream(yearTempDir + "year.xml", FileMode.Create))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(Year), new Type[] { typeof(List<int>) });
+                serializer.Serialize(fs, newYear);
+            }
+            // write empty list of meetings
+            using (FileStream fs = new FileStream(yearTempDir + "meetings.xml", FileMode.Create))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(List<Meeting>));
+                serializer.Serialize(fs, new List<Meeting>());
+            }
+            // write empty list of items (todo: import open items from previous year)
+            using (FileStream fs = new FileStream(yearTempDir + "items.xml", FileMode.Create))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(List<Item>));
+                serializer.Serialize(fs, new List<Item>());
+            }
+            // write empty list of items (todo: import open items from previous year)
+            using (FileStream fs = new FileStream(yearTempDir + "guidance.xml", FileMode.Create))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(List<Guidance>));
+                serializer.Serialize(fs, new List<Guidance>());
+            }
+            return newYear;
         }
 
         /// <summary>
@@ -76,8 +121,12 @@ namespace MinuteManager
                     return years[i].lsaYear;
                 }
             }
-            InternalError("Is it really after 2032???  If so, you need to add more years to the yearinfo.xml file in the appdata folder in your emulated copy of Windows running on your crazy 3D optical computron.  If not, maybe you should check your system clock, because I'm not sure what year it is.", false);
             // if all else fails, return the number of years between now and Ridvan, 1844
+            if (now.Month == 4 && now.Day >= 19 && now.Day <= 22)
+            {
+                // if it's currently around Ridvan, then we're not sure what year it is.
+                InternalError("Is it really after 2032???  If so, you need to add more years to the yearinfo.xml file in the appdata folder in your emulated copy of Windows running on your crazy 3D optical computron.  If not, maybe you should check your system clock, because I'm not sure what year it is.", false);
+            }
             return (new DateTime(1, 1, 1)).Add(now - new DateTime(1844, 4, 21)).Year;
         }
 
@@ -101,9 +150,25 @@ namespace MinuteManager
             throw new NotImplementedException();
         }
 
-        public void SaveMeeting(Meeting meeting)
+        /// <summary>
+        /// Save all the files in the temp directory to corresponding .mm files in the data directory.
+        /// </summary>
+        public void Save()
         {
-            throw new NotImplementedException();
+            string[] years = Directory.GetDirectories(tempDir);
+            int year;
+            foreach (string y in years)
+            {
+                if (Int32.TryParse((new DirectoryInfo(y)).Name, out year))
+                {
+                    string outName = dataPath + string.Format("{0}.mm", year);
+                    if (File.Exists(outName))
+                    {
+                        File.Delete(outName);
+                    }
+                    ZipFile.CreateFromDirectory(y, outName, CompressionLevel.Fastest, true);
+                }
+            }
         }
 
         public void SaveTempMeeting(Meeting meeting)
@@ -119,8 +184,36 @@ namespace MinuteManager
             }
         }
 
+        private Year Load(int year)
+        {
+            string yearTempDir = tempDir + string.Format(@"{0}\", year);
+            // try to load data from the save file into the temp directory
+            if (File.Exists(dataPath + string.Format("{0}.mm", year)))
+            {
+                if (Directory.Exists(yearTempDir))
+                {
+                    Directory.Delete(yearTempDir, true);
+                }
+                ZipFile.ExtractToDirectory(dataPath + string.Format("{0}.mm", year), tempDir);
+            }
+            // if there are data in the temp directory, then load the year.
+            bool x = Directory.Exists(yearTempDir);
+            bool y = File.Exists(yearTempDir + "year.xml");
+            if (Directory.Exists(yearTempDir) && File.Exists(yearTempDir + "year.xml"))
+            {
+                using (FileStream fs = new FileStream(yearTempDir + "year.xml", FileMode.Open))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(Year));
+                    return (Year)serializer.Deserialize(fs);
+                }
+            }
+            // couldn't find any data for the year.
+            return null;
+        }
+
         private List<YearInfo> WriteDefaultYearData()
         {
+            // Ridvan dates taken from http://www.religiouslife.emory.edu/documents/Baha_i%20Holy%20Days%2050%20year%20calendar.pdf
             List<YearInfo> years = new List<YearInfo>();
             years.Add(new YearInfo(170, DateTime.Parse("April 21, 2013")));
             years.Add(new YearInfo(171, DateTime.Parse("April 21, 2014")));
