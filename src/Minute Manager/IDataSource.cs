@@ -10,12 +10,13 @@ namespace MinuteManager
         List<int> YearsAvailable { get; }
         Year CreateNewYear(int year);
         int GetCurrentLsaYear();
-        List<Meeting> GetMeetingsForYear(int year);
-        List<Member> GetMembersForYear(int year);
-        Meeting AddNewMeeting();
-        void RemoveMeeting(Meeting meeting);
+        List<int> GetMeetingsForYear(int year);
+        List<int> GetMembersForYear(int year);
+        Meeting AddNewMeeting(int year);
+        void RemoveMeeting(int meeting);
         Item CreateItem();
         void Save();
-        void SaveTempMeeting(Meeting meeting);
+        void SaveTempMeeting(int year, Meeting meeting);
+        Meeting GetMeeting(int id);
     }
 }

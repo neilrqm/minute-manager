@@ -14,14 +14,47 @@ namespace MinuteManager
     public class Controller
     {
         private IDataSource dataSource;
-        public Controller()
+        private static Controller instance;
+        private Controller()
         {
-            dataSource = new XmlDataSource();
+            dataSource = XmlDataSource.GetInstance();
+            int currentYear = dataSource.GetCurrentLsaYear();
+            if (!dataSource.YearsAvailable.Contains(currentYear))
+            {
+                dataSource.CreateNewYear(currentYear);
+            }
         }
+        public static Controller GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = new Controller();
+            }
+            return instance;
+        }
+
+        public Meeting AddMeeting(Year year)
+        {
+            return dataSource.AddNewMeeting(year.LsaYear);
+        }
+
         public event InternalErrorEventHandler OnInternalError
         {
             add { dataSource.OnInternalError += value; }
             remove { dataSource.OnInternalError -= value; }
+        }
+
+        public List<Year> YearsAvailable
+        {
+            get
+            {
+                List<Year> years = new List<Year>();
+                foreach (int y in dataSource.YearsAvailable)
+                {
+                    years.Add(new Year(y));
+                }
+                return years;
+            }
         }
     }
 }

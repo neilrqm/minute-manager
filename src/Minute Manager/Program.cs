@@ -12,9 +12,10 @@ namespace MinuteManager
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
+            /*Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MinuteManager());
+            Application.Run(new MinuteManager());*/
+            Tester.RunTests();
         }
     }
 }
