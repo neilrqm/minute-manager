@@ -4,13 +4,13 @@ using System.Text;
 
 namespace MinuteManager
 {
-    public class InternalErrorEventArgs
+    public class InternalErrorEventArgs : EventArgs
     {
         public string Message { get; private set; }
         public bool Fatal { get; private set; }
         public InternalErrorEventArgs(string message, bool fatal) { Message = message; Fatal = fatal; }
     }
-    public delegate void InternalErrorEventHandler(object system, InternalErrorEventArgs args);
+    public delegate void InternalErrorEventHandler(object sender, InternalErrorEventArgs e);
     public class Controller
     {
         private IDataSource dataSource;
